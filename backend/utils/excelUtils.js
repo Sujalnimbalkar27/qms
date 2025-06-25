@@ -2,15 +2,35 @@
 const xlsx = require("xlsx");
 const path = require("path");
 const fs = require("fs");
+const csv = require("csv-parse/sync");
 
 /**
- * Load questions from Excel file.
+ * Load questions from CSV file (questions_with_id.csv)
  */
 function loadQuestions() {
-  const filePath = path.join(__dirname, "../../excel_data/questions.xlsx");
-  const workbook = xlsx.readFile(filePath);
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  return xlsx.utils.sheet_to_json(sheet);
+  const filePath = path.join(
+    __dirname,
+    "../../excel_data/questions_with_id.csv"
+  );
+  const csvData = fs.readFileSync(filePath, "utf8");
+  // Parse CSV, skip header row
+  const records = csv.parse(csvData, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  });
+  // Normalize keys for compatibility with backend logic
+  return records.map((row) => ({
+    Skill: row.Skill_id,
+    Level: row.Level_id,
+    Question: row.Question,
+    Option1: row.Option_A,
+    Option2: row.Option_B,
+    Option3: row.Option_C,
+    Option4: row.Option_D,
+    Answer: row.Correct_answer,
+    QuestionID: row.QuestionID,
+  }));
 }
 
 /**
